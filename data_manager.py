@@ -10,10 +10,18 @@ USER_DB_NAME = 'Unifocus_Database'
 COLS_SCHEDULE = ['活動名稱', '地點', '星期', '時間/節次', '類型']
 COLS_TASKS = ['活動名稱', '事項內容', '截止日期', '類型', '狀態']
 
+import streamlit as st # 記得加這行 import
+
 def get_connection():
-    if not os.path.exists(JSON_FILE): return None
     scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-    creds = ServiceAccountCredentials.from_json_keyfile_name(JSON_FILE, scope)
+    if "gcp_service_account" in st.secrets:
+        creds_dict = dict(st.secrets["gcp_service_account"])
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+    elif os.path.exists(JSON_FILE):
+        creds = ServiceAccountCredentials.from_json_keyfile_name(JSON_FILE, scope)
+    else:
+        return None
+        
     client = gspread.authorize(creds)
     return client
 
