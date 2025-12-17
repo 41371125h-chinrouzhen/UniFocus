@@ -43,7 +43,7 @@ def show():
                     else:
                         st.error("解析失敗，請確認 PDF 格式")
 
-    # --- 4. 顯示課表 (完美排序 + 緊湊樣式) ---
+    # --- 4. 顯示課表 (客製化時段版) ---
     st.markdown("---") 
 
     if st.session_state.schedule_data.empty:
@@ -53,15 +53,30 @@ def show():
             df = st.session_state.schedule_data.copy()
             
             # --- 步驟 A: 資料加工 ---
-            # 縮小字體，讓顯示更精緻
+            # 內容格式：粗體課名 + 灰色地點
             df['內容'] = (
-                '<div style="line-height:1.2;">'
+                '<div style="line-height:1.2; margin-bottom:4px;">'
                 '<b>' + df['活動名稱'] + '</b><br>'
                 '<span style="font-size:10px; color:#666; background:#f0f0f0; padding:1px 3px; border-radius:3px;">' + df['地點'] + '</span>'
                 '</div>'
             )
             
-            # --- 步驟 B: 轉成 Pivot Table ---
+            # --- 步驟 B: 定義顯示範圍 (過濾 M, 六, 日) ---
+            
+            # 1. 定義要顯示的星期 (排除六、日)
+            TARGET_DAYS = ['一', '二', '三', '四', '五']
+            
+            # 2. 定義要顯示的節次 (排除 M)
+            # 建立節次與時間的對照表 (台師大標準時間)
+            PERIOD_MAP = {
+                '1': '08:10-09:00', '2': '09:10-10:00', '3': '10:20-11:10', '4': '11:20-12:10',
+                '5': '12:20-13:10', '6': '13:20-14:10', '7': '14:20-15:10', '8': '15:30-16:20',
+                '9': '16:30-17:20', '10': '17:30-18:20', 
+                'A': '18:40-19:30', 'B': '19:35-20:25', 'C': '20:30-21:20', 'D': '21:25-22:15'
+            }
+            TARGET_PERIODS = list(PERIOD_MAP.keys()) # ['1', '2', ..., 'D']
+
+            # --- 步驟 C: 轉成 Pivot Table ---
             pivot_df = df.pivot_table(
                 index='時間/節次', 
                 columns='星期', 
@@ -69,24 +84,30 @@ def show():
                 aggfunc=lambda x: '<hr style="margin:2px 0; border-top:1px dashed #ccc;">'.join(x)
             )
             
-            # --- 步驟 C: 強制排序與補齊 (解決 10 在 1 前面 & 缺漏問題) ---
-            # 定義完整的顯示順序
-            ALL_DAYS = ['一', '二', '三', '四', '五']
-            # 定義台師大完整節次 (包含 1-10, A-D)
-            # 這裡用字串 '1', '2'... 確保跟 PDF 解析出來的型態一致
-            ALL_PERIODS = [str(i) for i in range(1, 11)] + ['A', 'B', 'C', 'D']
+            # --- 步驟 D: 強制重整索引 (關鍵步驟) ---
+            #這會同時達成：
+            # 1. 過濾掉不需要的行列 (M, 六, 日)
+            # 2. 依照正確順序排序
+            # 3. 補齊空缺的格子 (fill_value="")
+            pivot_df = pivot_df.reindex(index=TARGET_PERIODS, columns=TARGET_DAYS, fill_value="")
             
-            # 使用 reindex 強制依照我們定義的順序排列
-            # fill_value="" 會把原本沒有課的格子填成空白，確保該行/列出現
-            pivot_df = pivot_df.reindex(index=ALL_PERIODS, columns=ALL_DAYS, fill_value="")
+            # --- 步驟 E: 美化索引 (加入時間顯示) ---
+            # 將索引 '1' 改成 '1 <br> 08:10-09:00'
+            new_index = []
+            for p in pivot_df.index:
+                time_str = PERIOD_MAP.get(str(p), "")
+                label = f"<div style='font-size:14px; font-weight:bold; color:#444;'>{p}</div><div style='font-size:10px; color:#888; margin-top:2px;'>{time_str}</div>"
+                new_index.append(label)
             
-            # 移除全空的列 (可選：如果你不想顯示從來沒課的節次，例如 'M' 或 'D'，可以打開下面這行)
-            # pivot_df = pivot_df.loc[~(pivot_df == "").all(axis=1)] 
+            pivot_df.index = new_index
             
-            # --- 步驟 D: 產生 HTML ---
+            # 移除索引名稱，避免出現多餘的空白列 (這就是解決 "時間/節次" 多出一列的方法)
+            pivot_df.index.name = None 
+            
+            # --- 步驟 F: 產生 HTML ---
             table_html = pivot_df.to_html(classes="my-table", escape=False)
             
-            # --- 步驟 E: CSS 瘦身 (縮小表格) ---
+            # --- 步驟 G: CSS 樣式 ---
             final_html = f"""
             <!DOCTYPE html>
             <html>
@@ -95,40 +116,45 @@ def show():
                 body {{ 
                     font-family: "Noto Sans TC", sans-serif; 
                     margin: 0; 
-                    padding: 0; /* 移除 body padding */
+                    padding: 0;
                 }}
                 .my-table {{
                     width: 100%;
                     border-collapse: collapse;
                     border-radius: 6px;
                     overflow: hidden;
-                    font-size: 12px; /* 整體字體縮小 */
-                    table-layout: fixed; /* 固定寬度，避免某欄特別寬 */
+                    font-size: 12px;
+                    table-layout: fixed;
                 }}
+                /* 表頭 (星期) */
                 .my-table th {{
                     background-color: #6B8E78;
                     color: white;
-                    padding: 6px 4px; /* 縮小 Padding */
+                    padding: 8px 4px;
                     text-align: center;
                     border: 1px solid #ddd;
-                    width: 13%; /* 強制平均分配寬度 */
+                    width: 16%; /* 剩下 5 天平均分配 */
                 }}
-                /* 左側節次欄位 */
+                /* 左側節次欄位 (時間) */
                 .my-table tbody th {{
                     background-color: #f9f9f9;
                     color: #555;
-                    width: 5%;
-                    font-weight: bold;
+                    width: 80px; /* 固定寬度給時間欄 */
+                    font-weight: normal;
+                    vertical-align: middle;
+                    border: 1px solid #ddd;
                 }}
+                /* 內容儲存格 */
                 .my-table td {{
-                    padding: 4px; /* 縮小 Padding */
+                    padding: 4px;
                     border: 1px solid #eee;
                     text-align: center;
                     vertical-align: middle;
-                    height: auto; /* 讓高度自適應，不要固定 80px */
+                    height: auto;
                     background-color: white;
-                    word-wrap: break-word; /* 允許長字換行 */
+                    word-wrap: break-word;
                 }}
+                /* 偶數列變色 */
                 .my-table tr:nth-child(even) td {{
                     background-color: #fcfcfc;
                 }}
@@ -140,9 +166,10 @@ def show():
             </html>
             """
             
-            # 渲染 iframe (高度可以稍微設大一點，讓它有捲軸也沒關係，或者設小一點讓它更緊湊)
-            components.html(final_html, height=650, scrolling=True)
+            # 渲染 iframe (調整高度以適應內容)
+            components.html(final_html, height=800, scrolling=True)
 
         except Exception as e:
             st.error(f"顯示錯誤: {e}")
-            st.dataframe(st.session_state.schedule_data)
+            # 除錯用：如果失敗顯示原始表格
+            # st.dataframe(st.session_state.schedule_data)
