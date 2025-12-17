@@ -15,13 +15,11 @@ def render_navbar():
         st.markdown(f"<h3 style='color:{styles.COLOR_TEXT}; margin:0; display:flex; align-items:center;'><span style='color:{styles.COLOR_MAIN}; font-size:1.5em; margin-right:5px;'>U</span> UNIFOCUS</h3>", unsafe_allow_html=True)
     
     with col_nav:
-        # 導航按鈕
         n1, n2, n3, n4, n5 = st.columns(5)
-        current = st.session_state.get('page', '首頁')
         
         def nav(page): st.session_state.page = page
 
-        # 使用 type="primary" 來標示當前頁面，雖然我們 CSS 覆蓋了顏色，但這樣可以保留狀態感
+        # 使用 CSS 類別來控制按鈕樣式 (由 styles.py 統一管理)
         if n1.button("首頁", use_container_width=True): nav("首頁")
         if n2.button("我的課表", use_container_width=True): nav("我的課表")
         if n3.button("課前預習", use_container_width=True): nav("課前預習")
@@ -42,12 +40,12 @@ def render_navbar():
 def html_card(title, icon, content_html):
     """
     純 HTML 卡片 (用於展示靜態資訊)
-    注意：content_html 必須是乾淨的 HTML 字串
+    關鍵修正：加入 unsafe_allow_html=True
     """
     st.markdown(f"""
         <div class="html-card-container">
             <div class="card-header-box">
-                <span style="font-size: 1.2em;">{icon}</span> {title}
+                <span style="font-size: 1.1em; margin-right: 8px;">{icon}</span> {title}
             </div>
             <div class="html-card-body">
                 {content_html}
@@ -57,20 +55,16 @@ def html_card(title, icon, content_html):
 
 def interactive_card_container(title, icon):
     """
-    互動卡片容器
-    用法:
-    with interactive_card_container("標題", "圖標"):
-        st.text_input(...)
+    互動卡片容器 (用於包裹 Input/Button)
+    使用 st.container(border=True) 並用 CSS 修飾頭部
     """
-    # 使用 border=True 創建一個實體容器，CSS 會把它變成卡片樣式
     container = st.container(border=True)
     with container:
-        # 在容器最上方渲染標題
+        # 在容器内部渲染一個綠色的標題條
+        # 使用負 margin 讓它貼滿容器頂部
         st.markdown(f"""
-            <div style="margin: -16px -16px 15px -16px;">
-                <div class="card-header-box">
-                    <span>{icon}</span> {title}
-                </div>
+            <div style="background-color:{styles.COLOR_MAIN}; padding:12px 20px; margin:-16px -16px 15px -16px; color:white; font-weight:700; display:flex; align-items:center;">
+                <span style="font-size: 1.1em; margin-right: 8px;">{icon}</span> {title}
             </div>
         """, unsafe_allow_html=True)
     return container

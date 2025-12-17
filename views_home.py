@@ -31,13 +31,13 @@ def show():
     # === 左側欄位 ===
     with col_left:
         # A. 今日動態 (HTML 卡片)
-        today_str = datetime.date.today().strftime("%Y-%m-%d")
+        # 注意：這裡的 HTML 之前會顯示源碼，現在因為 components.py 修復了，會正常顯示
         components.html_card("今日動態", "🗓️", f"""
-            <p style="color:#666;">今天是 {today_str} (週三)</p>
-            <ul style="padding-left:20px; line-height:1.8; color:#333;">
-                <li><strong>09:00</strong> - 計算機概論 (誠201)</li>
-                <li><strong>13:00</strong> - 資料結構 (公館校區)</li>
-                <li><strong>16:00</strong> - 社團會議</li>
+            <p style="color:#666; margin-bottom:10px;">Let's go! 今天是週三</p>
+            <ul style="padding-left:20px; line-height:1.8; color:#333; list-style-type:none;">
+                <li style="margin-bottom:8px;">🕙 <strong>09:00</strong> - 計算機概論 (誠201)</li>
+                <li style="margin-bottom:8px;">🕐 <strong>13:00</strong> - 資料結構 (公館校區)</li>
+                <li style="margin-bottom:8px;">🕓 <strong>16:00</strong> - 系學會會議</li>
             </ul>
         """)
         
@@ -47,10 +47,10 @@ def show():
             with c1:
                 minutes = st.number_input("設定專注時間 (分鐘)", min_value=5, value=25, step=5)
             with c2:
-                st.markdown("<br>", unsafe_allow_html=True) # 對齊按鈕
+                st.markdown("<br>", unsafe_allow_html=True) 
                 if st.button("開始", use_container_width=True):
                     st.toast(f"開始 {minutes} 分鐘專注！加油！", icon="🔥")
-            st.markdown("<div style='color:#888; font-size:0.9em; margin-top:10px;'>保持專注，遠離手機 📱</div>", unsafe_allow_html=True)
+            st.markdown("<div style='color:#888; font-size:0.9em; margin-top:10px; text-align:center;'>保持專注，遠離手機 📱</div>", unsafe_allow_html=True)
 
     # === 右側欄位 ===
     with col_right:
@@ -58,7 +58,7 @@ def show():
         credits = st.session_state.get('calculated_credits', 18)
         components.html_card("本學期學分", "🎓", f"""
             <div style="text-align:center; padding:10px 0;">
-                <div style="font-size:4rem; font-weight:bold; color:#6B8E78; line-height:1;">{credits}</div>
+                <div style="font-size:4.5rem; font-weight:bold; color:#6B8E78; line-height:1;">{credits}</div>
                 <div style="color:#999; margin-top:5px;">AI 自動估算</div>
             </div>
         """)
@@ -73,13 +73,12 @@ def show():
             st.session_state.exam_date = target_date
             
             days = (target_date - datetime.date.today()).days
-            display_days = abs(days)
             color = "#E67E22" if days >= 0 else "#999"
-            label = "天" if days >= 0 else "天 (已結束)"
+            label = "天" if days >= 0 else "已結束"
             
             st.markdown(f"""
-                <div style="text-align:center; margin-top:10px; padding:10px; background:#FFF9F0; border-radius:10px;">
-                    <span style="font-size:2.5rem; font-weight:bold; color:{color};">{display_days}</span>
-                    <span style="color:{color};">{label}</span>
+                <div style="text-align:center; margin-top:15px; padding:15px; background:#FFF9F0; border-radius:10px;">
+                    <span style="font-size:3rem; font-weight:bold; color:{color};">{abs(days)}</span>
+                    <span style="color:{color}; font-size:1.2rem; margin-left:5px;">{label}</span>
                 </div>
             """, unsafe_allow_html=True)
