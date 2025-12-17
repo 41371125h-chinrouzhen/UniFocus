@@ -9,14 +9,14 @@ def show():
     
     with c2:
         # 1. 綠色大標題 (背景模糊效果模擬在卡片外)
-        st.markdown('<div class="login-title">UNIFOCUS</div>', unsafe_allow_html=True)
+        st.markdown('<div class="login-title"></div>', unsafe_allow_html=True)
         
         # 2. 登入卡片
         with st.container():
             # 注入 CSS 讓這個 container 變成卡片樣式
             st.markdown(f"""
                 <div style="background-color:rgba(255,255,255,0.9); padding:40px; border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,0.1); backdrop-filter: blur(10px); text-align:center;">
-                    <h3 style="color:{styles.COLOR_MAIN}; margin-bottom:20px;">🌿 UNIFOCUS智慧學習導航系統</h3>
+                    <h3 style="color:{styles.COLOR_MAIN}; margin-bottom:20px;">🌿 UNIFOCUS</h3>
                     <p style="color:#888; margin-bottom:30px;">智慧學習導航系統</p>
                 </div>
             """, unsafe_allow_html=True)
