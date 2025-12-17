@@ -3,103 +3,83 @@ import components
 import ai_logic
 
 def show():
-    # 初始化狀態：預設模式為 'menu' (選單)
     if 'post_mode' not in st.session_state: st.session_state.post_mode = 'menu'
     
-    # 標題區 (加入返回按鈕)
+    # 初始化聊天記錄
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = [{"role": "assistant", "content": "同學好！我是你的 AI 助教，有什麼課業問題都可以問我喔！"}]
+
     c_title, c_back = st.columns([4, 1])
-    with c_title:
-        st.markdown("<h3 style='font-weight: 700; margin:0;'>課後總整</h3>", unsafe_allow_html=True)
+    with c_title: st.markdown("<h3 style='font-weight: 700; margin:0;'>課後總整</h3>", unsafe_allow_html=True)
     with c_back:
-        # 如果不是在選單模式，顯示返回按鈕
         if st.session_state.post_mode != 'menu':
-            if st.button("↩️ 返回選單", use_container_width=True):
+            if st.button("↩️ 返回", use_container_width=True):
                 st.session_state.post_mode = 'menu'
                 st.rerun()
 
     st.write("")
 
-    # === 模式 A: 選單模式 (三個可點擊的卡片) ===
+    # === 模式 A: 選單 ===
     if st.session_state.post_mode == 'menu':
         c1, c2, c3 = st.columns(3)
-        
-        # 為了模擬「點擊卡片」，我們用大按鈕
         with c1:
             with st.container(border=True):
-                st.markdown("<h2 style='text-align:center;'>📝</h2>", unsafe_allow_html=True)
-                st.markdown("<h4 style='text-align:center;'>筆記整理</h4>", unsafe_allow_html=True)
-                st.markdown("<p style='text-align:center; color:#888;'>將雜亂筆記轉為重點</p>", unsafe_allow_html=True)
-                if st.button("開啟 筆記整理", use_container_width=True, key="btn_note"):
-                    st.session_state.post_mode = 'note'
-                    st.rerun()
-
+                st.markdown("<h2 style='text-align:center;'>📝</h2><h4 style='text-align:center;'>筆記整理</h4>", unsafe_allow_html=True)
+                if st.button("開啟", key="btn_note", use_container_width=True): st.session_state.post_mode = 'note'; st.rerun()
         with c2:
             with st.container(border=True):
-                st.markdown("<h2 style='text-align:center;'>🧠</h2>", unsafe_allow_html=True)
-                st.markdown("<h4 style='text-align:center;'>思維導圖</h4>", unsafe_allow_html=True)
-                st.markdown("<p style='text-align:center; color:#888;'>文字自動轉成架構圖</p>", unsafe_allow_html=True)
-                if st.button("開啟 思維導圖", use_container_width=True, key="btn_map"):
-                    st.session_state.post_mode = 'mindmap'
-                    st.rerun()
-                    
+                st.markdown("<h2 style='text-align:center;'>🧠</h2><h4 style='text-align:center;'>思維導圖</h4>", unsafe_allow_html=True)
+                if st.button("開啟", key="btn_map", use_container_width=True): st.session_state.post_mode = 'mindmap'; st.rerun()
         with c3:
             with st.container(border=True):
-                st.markdown("<h2 style='text-align:center;'>🤖</h2>", unsafe_allow_html=True)
-                st.markdown("<h4 style='text-align:center;'>AI 助教</h4>", unsafe_allow_html=True)
-                st.markdown("<p style='text-align:center; color:#888;'>有問題隨時問我</p>", unsafe_allow_html=True)
-                if st.button("開啟 AI 助教", use_container_width=True, key="btn_ai"):
-                    st.session_state.post_mode = 'ai'
-                    st.rerun()
+                st.markdown("<h2 style='text-align:center;'>🤖</h2><h4 style='text-align:center;'>AI 助教</h4>", unsafe_allow_html=True)
+                if st.button("開啟", key="btn_ai", use_container_width=True): st.session_state.post_mode = 'ai'; st.rerun()
 
-    # === 模式 B: 功能放大模式 ===
+    # === 模式 B: 功能 ===
+    elif st.session_state.post_mode == 'ai':
+        # --- AI 真實對話視窗 ---
+        with components.interactive_card_container("AI 助教 (問答模式)", "🤖"):
+            # 顯示歷史訊息
+            for msg in st.session_state.chat_history:
+                st.chat_message(msg["role"]).write(msg["content"])
+
+            # 輸入框
+            if prompt := st.chat_input("輸入你的問題..."):
+                st.session_state.chat_history.append({"role": "user", "content": prompt})
+                st.chat_message("user").write(prompt)
+                
+                with st.spinner("AI 思考中..."):
+                    response = ai_logic.get_ai_response(prompt, system_instruction="你是一個蘇格拉底式的教學助教，引導學生思考。")
+                    
+                st.session_state.chat_history.append({"role": "assistant", "content": response})
+                st.chat_message("assistant").write(response)
+
     else:
-        # 根據模式決定標題
-        titles = {'note': '筆記整理', 'mindmap': '思維導圖', 'ai': 'AI 助教'}
-        icons = {'note': '📝', 'mindmap': '🧠', 'ai': '🤖'}
-        
+        # 其他功能 (筆記 & 思維導圖)
         current = st.session_state.post_mode
+        titles = {'note': '筆記整理', 'mindmap': '思維導圖'}
+        icons = {'note': '📝', 'mindmap': '🧠'}
         
-        # 左右佈局：左輸入，右輸出
         c_left, c_right = st.columns([1, 1.2])
         
         with c_left:
             with components.interactive_card_container(f"{titles[current]} - 輸入", icons[current]):
-                input_text = st.text_area("請輸入內容...", height=300, key=f"input_{current}")
-                
-                # 不同模式的按鈕文字
-                btn_label = "⚡ 開始整理" if current == 'note' else "✨ 生成圖表" if current == 'mindmap' else "💬 發送訊息"
-                
-                if st.button(btn_label, use_container_width=True):
-                    if input_text.strip():
-                        with st.spinner("AI 思考中..."):
+                input_text = st.text_area("輸入內容...", height=300, key=f"in_{current}")
+                btn = "⚡ 整理" if current == 'note' else "✨ 生成圖表"
+                if st.button(btn, use_container_width=True):
+                    if input_text:
+                        with st.spinner("生成中..."):
                             if current == 'note':
-                                # 呼叫筆記整理
-                                res = ai_logic.get_ai_response(f"請將筆記整理成 Markdown 重點：\n{input_text}")
-                                st.session_state['res_note'] = res
-                            elif current == 'mindmap':
-                                # 呼叫思維導圖
-                                code = ai_logic.generate_mindmap_code(input_text)
-                                st.session_state['res_mindmap'] = code
-                            elif current == 'ai':
-                                # 呼叫對話
-                                res = ai_logic.get_ai_response(f"學生問：{input_text}\n請用蘇格拉底教學法回答：")
-                                st.session_state['res_ai'] = res
+                                st.session_state['res_note'] = ai_logic.get_ai_response(f"整理成Markdown重點：\n{input_text}")
+                            else:
+                                st.session_state['res_map'] = ai_logic.generate_mindmap_code(input_text)
                             st.rerun()
 
         with c_right:
-            with components.interactive_card_container("生成結果", "📄"):
-                # 根據不同模式顯示結果
+            with components.interactive_card_container("結果", "📄"):
                 if current == 'note' and 'res_note' in st.session_state:
                     st.markdown(st.session_state['res_note'])
-                    
-                elif current == 'mindmap' and 'res_mindmap' in st.session_state:
-                    try:
-                        st.graphviz_chart(st.session_state['res_mindmap'])
-                    except:
-                        st.error("圖表生成失敗")
-                        
-                elif current == 'ai' and 'res_ai' in st.session_state:
-                    st.info(st.session_state['res_ai'])
-                    
+                elif current == 'mindmap' and 'res_map' in st.session_state:
+                    st.graphviz_chart(st.session_state['res_map'])
                 else:
-                    st.markdown("<div style='text-align:center; padding:50px; color:#ccc;'>結果將顯示於此</div>", unsafe_allow_html=True)
+                    st.markdown("<div style='text-align:center; padding:50px; color:#ccc;'>結果區</div>", unsafe_allow_html=True)
