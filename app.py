@@ -6,9 +6,9 @@ import base64
 import time
 
 # 引入你的模組
-import ai_logic
-import data_manager
-import pdf_parser
+import ai_logic.py
+import data_manager.py
+import pdf_parser.py
 
 # --- 1. 設定與初始化 ---
 st.set_page_config(
