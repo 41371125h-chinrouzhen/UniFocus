@@ -24,27 +24,28 @@ def show():
     with c_right:
         r1_c1, r1_c2 = st.columns(2)
         with r1_c1:
-            # === 真實課表預覽 (今日課程) ===
-            now = datetime.datetime.now()
-            weekday_map = {0: '一', 1: '二', 2: '三', 3: '四', 4: '五', 5: '六', 6: '日'}
-            today_week = weekday_map[now.weekday()]
-            
-            preview_html = f"<div style='color:#ccc; text-align:center; padding:20px;'>今天 ({today_week}) 無課程</div>"
-            
-            if not st.session_state.schedule_data.empty:
-                df = st.session_state.schedule_data
-                # 篩選今天的課
-                today_courses = df[df['星期'] == today_week]
+            # === 真實課表預覽 (與首頁同步樣式) ===
+            with components.interactive_card_container("今日課表預覽", "📅"):
+                now = datetime.datetime.now()
+                weekday_map = {0: '一', 1: '二', 2: '三', 3: '四', 4: '五', 5: '六', 6: '日'}
+                today_week = weekday_map[now.weekday()]
                 
-                if not today_courses.empty:
-                    # 排序節次 (簡單字串排序，可優化)
-                    today_courses = today_courses.sort_values('時間/節次')
-                    rows = ""
-                    for _, row in today_courses.iterrows():
-                        rows += f"<li style='margin-bottom:8px; display:flex; justify-content:space-between;'><span><strong>{row['活動名稱']}</strong></span> <span style='font-size:0.8em; color:#6B8E78; background:#E8F3EB; padding:2px 6px; border-radius:10px;'>第 {row['時間/節次']} 節</span></li>"
-                    preview_html = f"<ul style='padding-left:0; list-style-type:none; color:#555;'>{rows}</ul>"
-            
-            components.html_card("今日課表預覽", "📅", preview_html)
+                today_courses_list = []
+                if not st.session_state.schedule_data.empty:
+                    df = st.session_state.schedule_data
+                    today_df = df[df['星期'] == today_week]
+                    if not today_df.empty:
+                        # 排序並去重
+                        today_df = today_df.sort_values('時間/節次')
+                        today_courses_list = today_df['活動名稱'].unique().tolist()
+                
+                st.markdown(f"<p style='color:#666; font-size:0.9em; margin-bottom:10px;'>今天是 {today_week}</p>", unsafe_allow_html=True)
+                
+                if today_courses_list:
+                    for c in today_courses_list:
+                        st.markdown(f"- 📚 **{c}**")
+                else:
+                    st.markdown("- 🌴 今日無排定課程")
             
         with r1_c2:
             components.html_card("最近記錄", "🕒", "<ul style='padding-left:20px; color:#555;'><li>計算機概論重點整理</li><li>資料結構思維導圖</li></ul>")

@@ -37,25 +37,24 @@ def show():
 
     # === 模式 B: 功能 ===
     elif st.session_state.post_mode == 'ai':
-        # --- AI 真實對話視窗 ---
         with components.interactive_card_container("AI 助教 (問答模式)", "🤖"):
-            # 顯示歷史訊息
             for msg in st.session_state.chat_history:
                 st.chat_message(msg["role"]).write(msg["content"])
 
-            # 輸入框
             if prompt := st.chat_input("輸入你的問題..."):
                 st.session_state.chat_history.append({"role": "user", "content": prompt})
                 st.chat_message("user").write(prompt)
                 
                 with st.spinner("AI 思考中..."):
-                    response = ai_logic.get_ai_response(prompt, system_instruction="你是一個蘇格拉底式的教學助教，引導學生思考。")
+                    # 這裡加入錯誤處理，若回傳 None 給預設值
+                    response = ai_logic.get_ai_response(prompt)
+                    if not response:
+                        response = "⚠️ AI 連線失敗，請檢查 API Key 或網路連線。"
                     
                 st.session_state.chat_history.append({"role": "assistant", "content": response})
                 st.chat_message("assistant").write(response)
 
     else:
-        # 其他功能 (筆記 & 思維導圖)
         current = st.session_state.post_mode
         titles = {'note': '筆記整理', 'mindmap': '思維導圖'}
         icons = {'note': '📝', 'mindmap': '🧠'}
@@ -72,14 +71,34 @@ def show():
                             if current == 'note':
                                 st.session_state['res_note'] = ai_logic.get_ai_response(f"整理成Markdown重點：\n{input_text}")
                             else:
+                                # 這裡可能會回傳 None
                                 st.session_state['res_map'] = ai_logic.generate_mindmap_code(input_text)
                             st.rerun()
 
         with c_right:
             with components.interactive_card_container("結果", "📄"):
-                if current == 'note' and 'res_note' in st.session_state:
-                    st.markdown(st.session_state['res_note'])
-                elif current == 'mindmap' and 'res_map' in st.session_state:
-                    st.graphviz_chart(st.session_state['res_map'])
-                else:
-                    st.markdown("<div style='text-align:center; padding:50px; color:#ccc;'>結果區</div>", unsafe_allow_html=True)
+                # --- 筆記整理結果 ---
+                if current == 'note':
+                    if 'res_note' in st.session_state:
+                        if st.session_state['res_note']:
+                            st.markdown(st.session_state['res_note'])
+                        else:
+                            st.error("AI 無法回應 (Result is None)")
+                    else:
+                        st.markdown("<div style='text-align:center; padding:50px; color:#ccc;'>結果區</div>", unsafe_allow_html=True)
+                
+                # --- 思維導圖結果 (關鍵修復點) ---
+                elif current == 'mindmap':
+                    if 'res_map' in st.session_state:
+                        dot_code = st.session_state['res_map']
+                        # 嚴格檢查：不是 None 且不是空字串才畫圖
+                        if dot_code and isinstance(dot_code, str) and len(dot_code.strip()) > 0:
+                            try:
+                                st.graphviz_chart(dot_code)
+                            except Exception as e:
+                                st.error(f"圖表渲染失敗: {e}")
+                                st.code(dot_code) # 顯示原始碼方便除錯
+                        else:
+                            st.error("⚠️ AI 生成失敗 (回傳空值)，請稍後再試。")
+                    else:
+                        st.markdown("<div style='text-align:center; padding:50px; color:#ccc;'>結果區</div>", unsafe_allow_html=True)
