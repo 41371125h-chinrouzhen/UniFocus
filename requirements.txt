@@ -1,7 +1,8 @@
 streamlit
 pandas
-google-generativeai
+pdfplumber
+google-generativeai>=0.8.0
 gspread
 oauth2client
-pdfplumber
 graphviz
+groq
