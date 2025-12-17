@@ -16,8 +16,8 @@ def show():
             # 注入 CSS 讓這個 container 變成卡片樣式
             st.markdown(f"""
                 <div style="background-color:rgba(255,255,255,0.9); padding:40px; border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,0.1); backdrop-filter: blur(10px); text-align:center;">
-                    <h3 style="color:{styles.COLOR_MAIN}; margin-bottom:20px;">🌿 智慧學習導航系統</h3>
-                    <p style="color:#888; margin-bottom:30px;">請輸入您的學號以開始</p>
+                    <h3 style="color:{styles.COLOR_MAIN}; margin-bottom:20px;">🌿 UNIFOCUS智慧學習導航系統</h3>
+                    <p style="color:#888; margin-bottom:30px;">智慧學習導航系統</p>
                 </div>
             """, unsafe_allow_html=True)
             
