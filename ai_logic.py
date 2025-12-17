@@ -15,10 +15,19 @@ def configure_genai():
 
 # --- 核心：AI 呼叫路由器 (Router) ---
 def get_ai_response(prompt, system_instruction=None):
-try:
-        # 修改這裡：使用你清單中的最新模型名稱
-        model = genai.GenerativeModel('gemini-2.5-flash') 
-        
+    """
+    這是 AI 的大腦。
+    策略：
+    1. 優先嘗試 Gemini 2.5 Flash (最新極速版)
+    2. 如果失敗，切換到 Groq (Llama 3) (備援)
+    3. 如果都失敗，回傳 None (讓外層決定顯示什麼錯誤訊息)
+    """
+    
+    # === 第一關：Gemini 2.5 Flash ===
+    try:
+        # 使用最新的 2.5 Flash 模型
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        # 如果有系統指令，可以加在 prompt 前面
         full_prompt = f"{system_instruction}\n\n{prompt}" if system_instruction else prompt
         response = model.generate_content(full_prompt)
         return response.text
