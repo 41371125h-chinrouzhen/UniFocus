@@ -10,17 +10,14 @@ def show():
     
     c1, c2, c3 = st.columns([1, 2, 1])
     
-    with c2:
-        # 1. 標題
-        st.markdown('<div class="login-title">UNIFOCUS</div>', unsafe_allow_html=True)
-        
+    with c2: 
         # 2. 登入卡片
         with st.container():
             # 卡片樣式
             st.markdown(f"""
                 <div style="background-color:rgba(255,255,255,0.9); padding:40px; border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,0.1); backdrop-filter: blur(10px); text-align:center;">
-                    <h3 style="color:{styles.COLOR_MAIN}; margin-bottom:20px;">🌿 智慧學習導航系統</h3>
-                    <p style="color:#888; margin-bottom:30px;">請輸入您的學號以開始</p>
+                    <h3 style="color:{styles.COLOR_MAIN}; margin-bottom:20px;">🌿 UNIFOCUS</h3>
+                    <p style="color:#888; margin-bottom:30px;">智慧學習導航系統</p>
                 </div>
             """, unsafe_allow_html=True)
             
