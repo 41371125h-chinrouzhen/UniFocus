@@ -39,6 +39,7 @@ def render_navbar():
 def html_card(title, icon, content_html):
     """
     純 HTML 卡片
+    ⚠️ 這裡就是問題所在！必須加上 unsafe_allow_html=True
     """
     st.markdown(f"""
         <div class="html-card-container">
@@ -49,7 +50,7 @@ def html_card(title, icon, content_html):
                 {content_html}
             </div>
         </div>
-    """, unsafe_allow_html=True)
+    """, unsafe_allow_html=True)  # <--- 請確保這一行一定要有 True
 
 def interactive_card_container(title, icon):
     """
