@@ -7,7 +7,6 @@ import streamlit.components.v1 as components
 
 def show():
     if 'show_upload' not in st.session_state: st.session_state.show_upload = False
-    # 新增風格狀態
     if 'schedule_style' not in st.session_state: st.session_state.schedule_style = '經典簡約'
 
     st.markdown("### 📅 我的課表")
@@ -40,10 +39,10 @@ def show():
                         st.success("匯入成功！"); st.rerun()
                     else: st.error("解析失敗")
 
-    # --- 設計區 (新增風格選擇) ---
+    # --- 設計區 ---
     if st.session_state.get('show_design', False):
         with st.container(border=True):
-            st.markdown("#### 🎨 選擇課表風格")
+            st.markdown("#### 🎨 選擇沉浸式風格")
             style_cols = st.columns(3)
             if style_cols[0].button("🌿 經典簡約", use_container_width=True): 
                 st.session_state.schedule_style = '經典簡約'; st.rerun()
@@ -61,39 +60,59 @@ def show():
             current_style = st.session_state.schedule_style
             df = st.session_state.schedule_data.copy().fillna("")
             
-            # 根據風格設定 CSS
+            # === 定義進階 CSS 樣式 ===
             if current_style == '像素遊戲':
-                theme_color = "#2c3e50"
                 font_import = "@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');"
                 font_family = "'Press Start 2P', cursive"
-                border_style = "4px solid #000"
-                cell_bg = "#fff"
+                # 復古 CRT 螢幕網格背景
+                bg_style = """
+                    background-color: #000;
+                    background-image: linear-gradient(rgba(0, 255, 0, 0.1) 1px, transparent 1px),
+                                      linear-gradient(90deg, rgba(0, 255, 0, 0.1) 1px, transparent 1px);
+                    background-size: 20px 20px, 20px 20px;
+                    border: 4px solid #33ff00;
+                    box-shadow: 0 0 20px rgba(51, 255, 0, 0.5);
+                    padding: 20px;
+                """
+                text_color = "#33ff00"
                 header_bg = "#000"
-                loc_style = "font-size:8px; color:#000; display:block; margin-top:5px;"
+                border_color = "#33ff00"
+                cell_bg = "transparent"
+                loc_bg = "#33ff00"; loc_text = "#000"
                 
             elif current_style == '手繪筆記':
-                theme_color = "#333"
                 font_import = "@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');"
                 font_family = "'Patrick Hand', cursive"
-                border_style = "2px solid #333"
-                cell_bg = "#fff9c4" # 黃色便利貼底
-                header_bg = "#333"
-                loc_style = "font-size:12px; color:#555; background:rgba(255,255,255,0.5); padding:2px; border-radius:5px;"
+                # 擬真筆記本橫線紙背景
+                bg_style = """
+                    background-color: #fffbf0;
+                    background-image: repeating-linear-gradient(transparent, transparent 23px, #e5e0d8 24px);
+                    border: 1px solid #ddd;
+                    box-shadow: 5px 5px 15px rgba(0,0,0,0.1);
+                    transform: rotate(-1deg); /* 稍微傾斜增加真實感 */
+                    padding: 25px;
+                """
+                text_color = "#333"
+                header_bg = "transparent"
+                border_color = "#555"
+                cell_bg = "transparent"
+                loc_bg = "rgba(255,255,0,0.3)"; loc_text = "#555" # 螢光筆效果
                 
-            else: # 經典簡約 (預設)
-                theme_color = "#6B8E78"
-                font_import = ""
+            else: # 經典簡約
+                font_import = "@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');"
                 font_family = "'Noto Sans TC', sans-serif"
-                border_style = "1px solid #ddd"
-                cell_bg = "#fff"
+                bg_style = "background: white; padding: 0;"
+                text_color = "#333"
                 header_bg = "#6B8E78"
-                loc_style = "font-size:10px; color:#666; background:#f4f4f4; padding:1px 3px; border-radius:3px;"
+                border_color = "#ddd"
+                cell_bg = "white"
+                loc_bg = "#f4f4f4"; loc_text = "#666"
 
             # 資料加工
             df['內容'] = (
-                f'<div style="line-height:1.2;">'
-                f'<b>' + df['活動名稱'] + '</b><br>'
-                f'<span style="{loc_style}">' + df['地點'] + '</span>'
+                f'<div style="line-height:1.3;">'
+                f'<b style="font-size:1.1em;">' + df['活動名稱'] + '</b><br>'
+                f'<span style="font-size:0.85em; color:{loc_text}; background:{loc_bg}; padding:2px 4px; border-radius:4px;">' + df['地點'] + '</span>'
                 f'</div>'
             )
             
@@ -101,13 +120,13 @@ def show():
             PERIOD_MAP = {'1': '08:10', '2': '09:10', '3': '10:20', '4': '11:20', '5': '12:20', '6': '13:20', '7': '14:20', '8': '15:30', '9': '16:30', '10': '17:30', 'A': '18:40', 'B': '19:35', 'C': '20:30', 'D': '21:25'}
             TARGET_PERIODS = list(PERIOD_MAP.keys())
 
-            pivot_df = df.pivot_table(index='時間/節次', columns='星期', values='內容', aggfunc=lambda x: '<hr style="margin:2px 0; border-top:1px dashed #ccc;">'.join(x))
+            pivot_df = df.pivot_table(index='時間/節次', columns='星期', values='內容', aggfunc=lambda x: '<hr style="margin:4px 0; border:0; border-top:1px dashed ' + border_color + ';">'.join(x))
             pivot_df = pivot_df.fillna("").reindex(index=TARGET_PERIODS, columns=TARGET_DAYS, fill_value="")
             
             new_index = []
             for p in pivot_df.index:
                 time_str = PERIOD_MAP.get(str(p), "")
-                new_index.append(f"<div style='font-size:14px; font-weight:bold; color:{header_bg if current_style != '手繪筆記' else '#333'};'>{p}</div><div style='font-size:10px; color:#888;'>{time_str}</div>")
+                new_index.append(f"<div style='font-size:1.2em; font-weight:bold;'>{p}</div><div style='font-size:0.8em; opacity:0.8;'>{time_str}</div>")
             
             pivot_df.index = new_index
             pivot_df.index.name = None 
@@ -115,24 +134,72 @@ def show():
             
             table_html = pivot_df.to_html(classes="my-table", escape=False)
             
+            # 組合最終 HTML
             final_html = f"""
             <!DOCTYPE html>
             <html>
             <head>
             <style>
                 {font_import}
-                body {{ font-family: {font_family}; margin: 0; padding: 0; }}
-                .my-table {{ width: 100%; border-collapse: collapse; border-radius: { '0' if current_style == '像素遊戲' else '6px' }; overflow: hidden; font-size: 12px; table-layout: fixed; }}
-                .my-table th {{ background-color: {header_bg}; color: white; padding: 8px 4px; text-align: center; border: {border_style}; width: 16%; }}
-                .my-table tbody th {{ background-color: #f9f9f9; color: #555; width: 60px; font-weight: normal; vertical-align: middle; border: {border_style}; }}
-                .my-table td {{ padding: 4px; border: {border_style}; text-align: center; vertical-align: middle; height: auto; background-color: {cell_bg}; word-wrap: break-word; }}
+                body {{ font-family: {font_family}; margin: 0; padding: 20px; background:transparent; }}
+                /* 外層容器，負責背景紋理和整體風格 */
+                .schedule-container {{
+                    {bg_style}
+                    border-radius: 12px;
+                    overflow: hidden;
+                    color: {text_color};
+                }}
+                .my-table {{ width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }}
+                
+                /* 表頭樣式差異化 */
+                .my-table thead th {{ 
+                    background-color: {header_bg}; 
+                    color: {'#33ff00' if current_style == '像素遊戲' else text_color if current_style == '手繪筆記' else 'white'};
+                    padding: 12px 4px; 
+                    text-align: center; 
+                    border-bottom: 2px solid {border_color}; 
+                    {'border-top: 2px solid ' + border_color if current_style == '手繪筆記' else ''};
+                    width: 16%;
+                    font-size: 1.1em;
+                }}
+                
+                /* 左側節次欄 */
+                .my-table tbody th {{ 
+                    background-color: { 'transparent' if current_style != '經典簡約' else '#f9f9f9'}; 
+                    color: {text_color}; 
+                    width: 70px; 
+                    vertical-align: middle; 
+                    border-right: 2px solid {border_color}; 
+                    text-align: center;
+                }}
+                
+                /* 內容儲存格 */
+                .my-table td {{ 
+                    padding: 8px; 
+                    border: 1px solid {border_color}; 
+                    text-align: center; 
+                    vertical-align: middle; 
+                    height: auto; 
+                    background-color: {cell_bg}; 
+                    word-wrap: break-word; 
+                }}
+                
+                /* 像素風特殊處理：移除內部邊框，只留網格背景 */
+                {'.my-table td, .my-table th { border: none !important; }' if current_style == '像素遊戲' else ''}
+                
             </style>
             </head>
-            <body>{table_html}</body>
+            <body>
+                <div class="schedule-container">
+                    <div style="overflow-x:auto;">
+                        {table_html}
+                    </div>
+                </div>
+            </body>
             </html>
             """
             
-            components.html(final_html, height=800, scrolling=True)
+            components.html(final_html, height=850, scrolling=True)
 
         except Exception as e:
             st.error(f"顯示錯誤: {e}")
