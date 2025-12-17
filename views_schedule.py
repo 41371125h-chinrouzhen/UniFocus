@@ -57,62 +57,60 @@ def show():
                         else:
                             st.error("⚠️ 解析失敗，請確認 PDF 格式")
 
-    # --- 4. 顯示課表 (關鍵修復部分) ---
+# --- 4. 顯示課表主體 ---
     st.write("") 
     
-    # 使用互動容器包裹
-    with components.interactive_card_container("本週課表", "📅"):
-        
-        if st.session_state.schedule_data.empty:
-            # 空狀態
-            st.markdown("""
-                <div style="text-align:center; color:#888; padding:50px;">
-                    <div style="font-size:3rem; margin-bottom:10px;">📭</div>
-                    <p>尚無課表資料</p>
+    # 暫時註解掉容器，先測試直接顯示
+    # with components.interactive_card_container("本週課表", "📅"):
+    
+    st.markdown(f"""
+    <div style="
+        background-color: white; 
+        padding: 20px; 
+        border-radius: 16px; 
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        margin-bottom: 20px;">
+        <div style="background-color:#6B8E78; color:white; padding:10px 20px; border-radius:10px 10px 0 0; margin:-20px -20px 20px -20px; font-weight:bold;">
+            📅 本週課表
+        </div>
+    """, unsafe_allow_html=True)
+
+    if st.session_state.schedule_data.empty:
+        st.markdown("<div style='text-align:center; padding:50px; color:#888;'>📭 尚無課表資料</div>", unsafe_allow_html=True)
+    else:
+        try:
+            df = st.session_state.schedule_data.copy()
+            
+            # 簡化內容，先求顯示成功
+            df['內容'] = '<b>' + df['活動名稱'] + '</b><br>' + df['地點']
+            
+            pivot_df = df.pivot_table(
+                index='時間/節次', 
+                columns='星期', 
+                values='內容', 
+                aggfunc=lambda x: '<br><hr>'.join(x)
+            ).fillna("")
+            
+            days_order = ['一', '二', '三', '四', '五', '六', '日']
+            existing_days = [d for d in days_order if d in pivot_df.columns]
+            pivot_df = pivot_df[existing_days]
+            
+            # 產生純淨的 HTML
+            table_html = pivot_df.to_html(classes="schedule-table", escape=False)
+            
+            # 渲染
+            st.markdown(f"""
+                <style>
+                .schedule-table {{ width: 100%; border-collapse: collapse; }}
+                .schedule-table th {{ background: #6B8E78; color: white; padding: 8px; border: 1px solid #ddd; }}
+                .schedule-table td {{ padding: 8px; border: 1px solid #ddd; text-align: center; }}
+                </style>
+                <div style="overflow-x: auto;">
+                    {table_html}
                 </div>
             """, unsafe_allow_html=True)
             
-        else:
-            try:
-                # 準備資料
-                df = st.session_state.schedule_data.copy()
-                
-                # 格式化內容：粗體課名 + 灰色地點
-                df['內容'] = '<b>' + df['活動名稱'] + '</b><br><span style="font-size:0.8em; color:#666; background:#f4f4f4; padding:2px 4px; border-radius:4px;">' + df['地點'] + '</span>'
-                
-                # 轉成週課表格式 (Pivot)
-                pivot_df = df.pivot_table(
-                    index='時間/節次', 
-                    columns='星期', 
-                    values='內容', 
-                    aggfunc=lambda x: '<br><hr style="margin:4px 0; border-top:1px dashed #ddd;">'.join(x)
-                ).fillna("")
-                
-                # 排序星期
-                days_order = ['一', '二', '三', '四', '五', '六', '日']
-                existing_days = [d for d in days_order if d in pivot_df.columns]
-                pivot_df = pivot_df[existing_days]
-                
-                # 1. 定義 CSS 樣式 (獨立變數，避免縮排錯誤)
-                css_style = """
-                <style>
-                    .schedule-table { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #E0E0E0; border-radius: 8px; overflow: hidden; font-family: sans-serif; }
-                    .schedule-table thead tr th { background-color: #6B8E78; color: white; padding: 12px; text-align: center; border-bottom: 2px solid #5a7a66; }
-                    .schedule-table tbody th { background-color: #f9f9f9; color: #555; border-right: 1px solid #eee; padding: 10px; text-align: center; min-width: 60px; font-weight: bold; }
-                    .schedule-table td { background-color: white; padding: 10px; border-bottom: 1px solid #f0f0f0; border-right: 1px solid #f0f0f0; text-align: center; vertical-align: top; height: 80px; min-width: 100px; }
-                    .schedule-table td:hover { background-color: #fcfcfc; }
-                </style>
-                """
-                
-                # 2. 轉成 HTML 表格
-                table_html = pivot_df.to_html(classes="schedule-table", escape=False)
-                
-                # 3. 組合最終 HTML
-                final_html = f'{css_style}<div style="overflow-x: auto;">{table_html}</div>'
-                
-                # 4. 渲染！ (這行最重要的 unsafe_allow_html=True)
-                st.markdown(final_html, unsafe_allow_html=True)
-                
-            except Exception as e:
-                st.error(f"顯示錯誤: {e}")
-                st.dataframe(st.session_state.schedule_data)
+        except Exception as e:
+            st.error(f"Error: {e}")
+            
+    st.markdown("</div>", unsafe_allow_html=True) # 閉合卡片 div

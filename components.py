@@ -54,30 +54,29 @@ def html_card(title, icon, content_html):
 
 def interactive_card_container(title, icon):
     """
-    互動卡片容器
+    互動卡片容器 (修復版)
     """
-    # 注入 CSS 強制修改容器樣式
-    st.markdown(f"""
-        <style>
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.interactive-card-header) {{
-            background-color: {styles.COLOR_CARD_BG} !important;
-            border-radius: 16px !important;
-            border: none !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
-            padding: 20px !important;
-        }}
-        </style>
-    """, unsafe_allow_html=True)
-
+    # 建立一個容器
     container = st.container(border=True)
     
+    # 在容器「內部」注入 CSS，這樣才能確保樣式正確套用到這個特定的區塊
+    # 我們移除了複雜的 :has 選擇器，改用更直接的方式渲染標題
     with container:
-        # 標題列
         st.markdown(f"""
-            <div class="interactive-card-header" style="
+            <style>
+            /* 針對這個容器內部的樣式調整 */
+            div[data-testid="stVerticalBlockBorderWrapper"] {{
+                background-color: {styles.COLOR_CARD_BG};
+                border-radius: 16px;
+                border: none;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            }}
+            </style>
+            
+            <div style="
                 background-color:{styles.COLOR_MAIN}; 
                 padding:12px 20px; 
-                margin: -20px -20px 20px -20px; 
+                margin: -16px -16px 15px -16px; 
                 color:white; 
                 font-weight:700; 
                 display:flex; 
