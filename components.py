@@ -19,7 +19,6 @@ def render_navbar():
         
         def nav(page): st.session_state.page = page
 
-        # 按鈕樣式由 styles.py 統一控制，這裡只負責邏輯
         if n1.button("首頁", use_container_width=True): nav("首頁")
         if n2.button("我的課表", use_container_width=True): nav("我的課表")
         if n3.button("課前預習", use_container_width=True): nav("課前預習")
@@ -39,8 +38,8 @@ def render_navbar():
 
 def html_card(title, icon, content_html):
     """
-    純 HTML 卡片 (用於展示靜態資訊)
-    已修復：加入 unsafe_allow_html=True，解決顯示源碼的問題
+    純 HTML 卡片
+    ⚠️ 關鍵修正：這裡必須加上 unsafe_allow_html=True，否則會顯示原始碼
     """
     st.markdown(f"""
         <div class="html-card-container">
@@ -51,42 +50,34 @@ def html_card(title, icon, content_html):
                 {content_html}
             </div>
         </div>
-    """, unsafe_allow_html=True)
+    """, unsafe_allow_html=True)  # <--- 就是這裡！
 
 def interactive_card_container(title, icon):
     """
-    互動卡片容器 (解決方案：強制統一 CSS)
-    
-    這段程式碼會做三件事：
-    1. 注入 CSS，找到這個容器並強制設定 padding 為 20px，背景為白色，加上陰影 (模擬 HTML 卡片)。
-    2. 渲染標題列，使用 -20px 的負邊距 (Negative Margin) 讓它往上、往左、往右延伸，蓋住內距，達成「滿版標題」效果。
-    3. 下方的 widgets 因為容器原本就有 20px padding，所以會自然與邊緣保持距離，不會貼邊。
+    互動卡片容器
     """
-    
-    # 1. 注入針對此容器的強制樣式 (利用 :has 選取器定位)
+    # 注入 CSS 強制修改容器樣式
     st.markdown(f"""
         <style>
-        /* 定位包含 .interactive-card-header 的父容器 */
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.interactive-card-header) {{
             background-color: {styles.COLOR_CARD_BG} !important;
             border-radius: 16px !important;
-            border: none !important; /* 移除 Streamlit 預設灰框 */
+            border: none !important;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
-            padding: 20px !important; /* 強制內距統一為 20px */
+            padding: 20px !important;
         }}
         </style>
-    """, unsafe_allow_html=True)
+    """, unsafe_allow_html=True) # <--- 這裡也要
 
-    # 2. 建立容器 (border=True 用於產生結構，但我們用上面的 CSS 把它的預設樣式蓋掉了)
     container = st.container(border=True)
     
     with container:
-        # 3. 渲染滿版標題 (使用 margin: -20px 抵消容器的 padding: 20px)
+        # 標題列
         st.markdown(f"""
             <div class="interactive-card-header" style="
                 background-color:{styles.COLOR_MAIN}; 
                 padding:12px 20px; 
-                margin: -20px -20px 20px -20px; /* 關鍵：負邊距填滿四周 */
+                margin: -20px -20px 20px -20px; 
                 color:white; 
                 font-weight:700; 
                 display:flex; 
@@ -94,9 +85,6 @@ def interactive_card_container(title, icon):
                 border-radius: 16px 16px 0 0;">
                 <span style="font-size: 1.1em; margin-right: 8px;">{icon}</span> {title}
             </div>
-        """, unsafe_allow_html=True)
-        
-        # 在這裡之後放入的 st.text_input 等元件，
-        # 會因為容器本身有 padding: 20px，自動顯示在正確的位置，看起來跟 HTML 卡片一模一樣。
+        """, unsafe_allow_html=True) # <--- 這裡也要
         
     return container
