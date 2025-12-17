@@ -25,6 +25,7 @@ def show():
     time_str = now.strftime("%H:%M")
     temp, weather_desc = get_real_weather()
     
+    # 頂部佈局調整，讓標題跟資訊更緊湊
     c_title, c_info = st.columns([1, 1])
     with c_title: st.markdown("<h3 style='font-weight: 700; margin:0;'>首頁 Dashboard</h3>", unsafe_allow_html=True)
     with c_info:
@@ -35,7 +36,17 @@ def show():
 
     # === 左側 ===
     with col_left:
-        # A. 今日動態
+        # A. 新增：網站介紹卡片
+        with components.interactive_card_container("關於 Unifocus", "👋"):
+            st.markdown("""
+            <div style="color:#555; font-size:0.95rem; line-height:1.6;">
+                歡迎來到 <b>Unifocus 智慧學習導航系統</b>！<br>
+                這裡整合了你的<b>課表管理</b>、<b>AI 學習助手</b>與<b>專注工具</b>。
+                無論是課前預習、課後整理筆記，或是考試倒數，Unifocus 都能幫你輕鬆搞定，讓學習變得更有條理。
+            </div>
+            """, unsafe_allow_html=True)
+
+        # B. 今日動態
         with components.interactive_card_container("今日動態", "🗓️"):
             weekday_map = {0: '一', 1: '二', 2: '三', 3: '四', 4: '五', 5: '六', 6: '日'}
             today_week = weekday_map[now.weekday()]
@@ -45,7 +56,6 @@ def show():
                 df = st.session_state.schedule_data
                 today_df = df[df['星期'] == today_week]
                 if not today_df.empty:
-                    # 排序並去重
                     today_df = today_df.sort_values('時間/節次')
                     today_courses_list = today_df['活動名稱'].unique().tolist()
             
@@ -71,7 +81,7 @@ def show():
             else:
                 st.markdown("- 🌴 自由時間")
 
-        # B. 專注計時器
+        # C. 專注計時器
         with components.interactive_card_container("專注計時器", "⏱️"):
             c1, c2 = st.columns([2, 1])
             with c1: minutes = st.number_input("時間 (分)", 1, 120, 25, step=5, key="focus_min")
@@ -94,58 +104,32 @@ def show():
 
     # === 右側 ===
     with col_right:
-        # C. 學分 (可手動修改版)
+        # D. 學分 (調整間距)
         with components.interactive_card_container("本學期學分", "🎓"):
-            # 1. 讀取設定
             settings = data_manager.load_settings(st.session_state.username)
-            
-            # 2. 如果設定有存過，就用存的；否則自動計算
             if 'manual_credits' in settings:
                 current_credits = int(settings['manual_credits'])
             else:
-                # 自動計算預設值
                 current_credits = 0
                 if not st.session_state.schedule_data.empty:
                     current_credits = len(st.session_state.schedule_data['活動名稱'].unique()) * 2
             
-            # 3. 顯示輸入框 (讓使用者可以改)
-            new_credits = st.number_input("總學分 (可手動修正)", value=current_credits, step=1)
+            new_credits = st.number_input("總學分 (可修正)", value=current_credits, step=1)
             
-            # 4. 如果有變動，存檔
             if new_credits != current_credits:
                 data_manager.save_setting(st.session_state.username, 'manual_credits', str(new_credits))
                 st.rerun()
             
             st.markdown(f"""
-                <div style="text-align:center; padding:0px 0;">
+                <div style="text-align:center; padding:10px 0;">
                     <div style="font-size:3.5rem; font-weight:bold; color:#6B8E78; line-height:1.2;">{new_credits}</div>
                 </div>
+                <div style="height:15px;"></div>
             """, unsafe_allow_html=True)
 
-        # D. 倒數日
+        # E. 倒數日 (調整間距)
         with components.interactive_card_container("倒數日", "⏳"):
             if 'exam_name' not in st.session_state:
                 settings = data_manager.load_settings(st.session_state.username)
                 st.session_state.exam_name = settings.get('exam_name', '期中考')
-                st.session_state.exam_date = datetime.datetime.strptime(settings.get('exam_date', '2025-06-20'), "%Y-%m-%d").date()
-
-            cd_col1, cd_col2 = st.columns([1, 1.5])
-            days = (st.session_state.exam_date - datetime.date.today()).days
-            color = "#E67E22" if days >= 0 else "#999"
-            
-            with cd_col1:
-                st.markdown(f"""
-                    <div style="text-align:center; background:#FFF9F0; padding:15px 5px; border-radius:8px; height:100%;">
-                        <div style="font-size:2.5rem; font-weight:bold; color:{color}; line-height:1;">{abs(days)}</div>
-                        <div style="font-size:0.8rem; color:{color};">天</div>
-                    </div>
-                """, unsafe_allow_html=True)
-            with cd_col2:
-                new_name = st.text_input("目標", value=st.session_state.exam_name, label_visibility="collapsed")
-                new_date = st.date_input("日期", value=st.session_state.exam_date, label_visibility="collapsed")
-                if new_name != st.session_state.exam_name or new_date != st.session_state.exam_date:
-                    st.session_state.exam_name = new_name
-                    st.session_state.exam_date = new_date
-                    data_manager.save_setting(st.session_state.username, 'exam_name', new_name)
-                    data_manager.save_setting(st.session_state.username, 'exam_date', str(new_date))
-                    st.rerun()
+                st.session_state.exam_date = datetime.datetime.strptime(settings.get('exam_date', '2025-06-20'), "%Y-%m-%d

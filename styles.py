@@ -11,34 +11,33 @@ def load_css():
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
 
-        /* 1. 全域設定 & 減少頂部留白 */
+        /* 1. 全域設定 */
         .stApp {{
             background-color: {COLOR_BG};
             font-family: 'Noto Sans TC', sans-serif;
             color: {COLOR_TEXT};
         }}
         
-        /* 調整頂部間距 */
+        /* 2. 關鍵修改：大幅減少頂部留白，讓網頁向上移動 */
         .block-container {{
-            padding-top: 2rem !important; 
+            padding-top: 0.5rem !important; /* 從 2rem 改為 0.5rem */
             padding-bottom: 2rem !important;
+            max-width: 98% !important;
         }}
 
         /* 隱藏預設元素 */
         #MainMenu, footer, header {{visibility: hidden;}}
         
-        /* 2. 導航列按鈕樣式 */
+        /* 導航列按鈕樣式 */
         .nav-btn {{ border: none; background: transparent; color: {COLOR_TEXT}; }}
 
-        /* 3. 卡片樣式 (互動與靜態通用) */
-        
-        /* 針對 st.container(border=True) 的樣式覆寫 */
+        /* 3. 卡片樣式 */
         div[data-testid="stVerticalBlockBorderWrapper"] {{
             background-color: {COLOR_CARD_BG};
             border-radius: 16px;
-            border: none !important; /* 移除預設灰框 */
+            border: none !important;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            padding: 16px; /* 內距 */
+            padding: 16px;
         }}
         
         /* 純 HTML 卡片容器 */
@@ -51,7 +50,7 @@ def load_css():
             height: 100%;
         }}
         
-        /* 卡片標題區塊 (綠色) */
+        /* 卡片標題區塊 */
         .card-header-box {{
             background-color: {COLOR_MAIN};
             color: white;
@@ -63,7 +62,7 @@ def load_css():
         
         .html-card-body {{ padding: 20px; }}
         
-        /* 4. 按鈕樣式 (強制綠色) */
+        /* 按鈕樣式 */
         .stButton > button {{
             background-color: {COLOR_MAIN} !important;
             color: white !important;
@@ -78,12 +77,12 @@ def load_css():
             opacity: 0.95;
         }}
 
-        /* 5. Dashboard 頂部資訊 */
+        /* Dashboard 頂部資訊 */
         .dashboard-info {{
-            font-size: 1rem;
+            font-size: 0.95rem;
             color: #555;
             background: #E8F3EB;
-            padding: 8px 16px;
+            padding: 6px 12px;
             border-radius: 20px;
             display: inline-flex;
             align-items: center;
