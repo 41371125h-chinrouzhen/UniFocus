@@ -46,8 +46,7 @@ def show():
 
     st.write("") # 頂部間距
 
-    # === 3. 三欄佈局 (左、中、右) ===
-    # 調整比例：左欄稍窄(0.8)，中欄最寬(1.2)，右欄標準(1)
+    # === 3. 三欄佈局 ===
     c_left, c_mid, c_right = st.columns([0.8, 1.2, 1])
 
     # --- 【最左欄】：網站介紹 ---
@@ -152,7 +151,7 @@ def show():
                 </div>
             """, unsafe_allow_html=True)
 
-        # D. 倒數日
+        # D. 倒數日 (更新：左右並排設計)
         with components.interactive_card_container("倒數日", "⏳"):
             if 'exam_name' not in st.session_state:
                 settings = data_manager.load_settings(st.session_state.username)
@@ -166,23 +165,32 @@ def show():
             days = (st.session_state.exam_date - datetime.date.today()).days
             color = "#E67E22" if days >= 0 else "#999"
             
-            # 調整佈局：天數在上，設定在下，更適合窄欄位
-            st.markdown(f"""
-                <div style="text-align:center; background:#FFF9F0; padding:10px; border-radius:8px; margin-bottom:10px;">
-                    <span style="font-size:2.2rem; font-weight:bold; color:{color}; line-height:1;">{abs(days)}</span>
-                    <span style="font-size:0.8rem; color:{color};">天</span>
-                </div>
-            """, unsafe_allow_html=True)
+            # --- 關鍵修改：使用 columns 分割左右 ---
+            # 比例設為 1:1.5，右邊稍微寬一點放輸入框
+            col_cd_left, col_cd_right = st.columns([1, 1.5])
             
-            new_name = st.text_input("目標", value=st.session_state.exam_name, label_visibility="collapsed", placeholder="目標名稱")
-            new_date = st.date_input("日期", value=st.session_state.exam_date, label_visibility="collapsed")
+            with col_cd_left:
+                # 左側：大數字天數 (使用 Flexbox 垂直置中)
+                st.markdown(f"""
+                    <div style="text-align:center; background:#FFF9F0; padding:10px 5px; border-radius:8px; height:100%; display:flex; flex-direction:column; justify-content:center;">
+                        <div style="font-size:2.2rem; font-weight:bold; color:{color}; line-height:1;">{abs(days)}</div>
+                        <div style="font-size:0.8rem; color:{color};">天</div>
+                    </div>
+                """, unsafe_allow_html=True)
             
-            if new_name != st.session_state.exam_name or new_date != st.session_state.exam_date:
-                st.session_state.exam_name = new_name
-                st.session_state.exam_date = new_date
-                data_manager.save_setting(st.session_state.username, 'exam_name', new_name)
-                data_manager.save_setting(st.session_state.username, 'exam_date', str(new_date))
-                st.rerun()
+            with col_cd_right:
+                # 右側：設定輸入框
+                new_name = st.text_input("目標", value=st.session_state.exam_name, label_visibility="collapsed", placeholder="目標")
+                # 日期選擇稍微縮小一點字體或間距
+                new_date = st.date_input("日期", value=st.session_state.exam_date, label_visibility="collapsed")
+                
+                # 存檔邏輯
+                if new_name != st.session_state.exam_name or new_date != st.session_state.exam_date:
+                    st.session_state.exam_name = new_name
+                    st.session_state.exam_date = new_date
+                    data_manager.save_setting(st.session_state.username, 'exam_name', new_name)
+                    data_manager.save_setting(st.session_state.username, 'exam_date', str(new_date))
+                    st.rerun()
             
-            # 底部微調
+            # 底部留一點白
             st.markdown("<div style='height:5px;'></div>", unsafe_allow_html=True)
