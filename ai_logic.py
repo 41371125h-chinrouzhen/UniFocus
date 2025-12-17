@@ -27,8 +27,6 @@ def get_ai_response(prompt, system_instruction=None):
     if "GEMINI_API_KEY" in st.secrets:
         try:
             genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-            
-            # 使用目前最穩定的 1.5 Flash
             model = genai.GenerativeModel(
                 'gemini-2.5-flash',
                 safety_settings=safety_settings
@@ -40,8 +38,7 @@ def get_ai_response(prompt, system_instruction=None):
             if response and response.text:
                 return response.text
         except Exception as e:
-            print(f"Gemini 1.5 Flash 失敗: {e}")
-            # 如果 1.5 失敗，嘗試 fallback 到 2.0 (如果有的話)
+            print(f"Gemini 2.5 Flash 失敗: {e}")
             try:
                 model = genai.GenerativeModel('gemini-2.0-flash-exp', safety_settings=safety_settings)
                 response = model.generate_content(final_prompt)
