@@ -39,7 +39,6 @@ def render_navbar():
 def html_card(title, icon, content_html):
     """
     純 HTML 卡片
-    ⚠️ 關鍵修正：這裡必須加上 unsafe_allow_html=True，否則會顯示原始碼
     """
     st.markdown(f"""
         <div class="html-card-container">
@@ -50,7 +49,7 @@ def html_card(title, icon, content_html):
                 {content_html}
             </div>
         </div>
-    """, unsafe_allow_html=True)  # <--- 就是這裡！
+    """, unsafe_allow_html=True)
 
 def interactive_card_container(title, icon):
     """
@@ -67,7 +66,7 @@ def interactive_card_container(title, icon):
             padding: 20px !important;
         }}
         </style>
-    """, unsafe_allow_html=True) # <--- 這裡也要
+    """, unsafe_allow_html=True)
 
     container = st.container(border=True)
     
@@ -85,6 +84,6 @@ def interactive_card_container(title, icon):
                 border-radius: 16px 16px 0 0;">
                 <span style="font-size: 1.1em; margin-right: 8px;">{icon}</span> {title}
             </div>
-        """, unsafe_allow_html=True) # <--- 這裡也要
+        """, unsafe_allow_html=True)
         
     return container
