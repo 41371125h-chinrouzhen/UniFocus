@@ -6,7 +6,7 @@ import streamlit as st
 
 JSON_FILE = 'google_key.json'
 USER_DB_NAME = 'Unifocus_Database'
-SETTINGS_WS_NAME = 'User_Settings' # 新增：專門存設定的工作表
+SETTINGS_WS_NAME = 'User_Settings' 
 
 # 定義欄位
 COLS_SCHEDULE = ['活動名稱', '地點', '星期', '時間/節次', '類型']
