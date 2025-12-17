@@ -1,9 +1,8 @@
 streamlit
 pandas
+numpy
 pdfplumber
-google-generativeai>=0.8.0
-gspread
-oauth2client
-graphviz
-groq
 supabase
+google-generativeai>=0.8.0
+groq
+graphviz
