@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-# 引入所有視圖模組
+# MVC
 import styles
 import components
 import views_login
